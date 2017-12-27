@@ -28,6 +28,7 @@ func main() {
 			if re.MatchString(value) {
 				m := re.FindStringSubmatch(value)
 
+				//Captura o titulo
 				fmt.Println(m[1])
 
 				fmt.Printf("%q\n", re.FindString(value))
