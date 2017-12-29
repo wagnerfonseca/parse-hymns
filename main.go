@@ -11,7 +11,10 @@ import (
 
 const sourcePath = "./raw"
 
-var hymns map[int]*Hymn
+var (
+	hymns map[int]*Hymn
+	re    = regexp.MustCompile(`(?P<Number>[0-9]+\.) (?P<Title>[a-zA-Zà-úÀ-Ú0-9 \,\']+)`)
+)
 
 func main() {
 
@@ -27,17 +30,23 @@ func main() {
 
 		hymns = make(map[int]*Hymn)
 		for _, value := range lines {
-			re := regexp.MustCompile(`(?P<Number>[0-9]+\.) (?P<Title>[a-zA-Zà-úÀ-Ú0-9 \,\']+)`)
 
-			if re.MatchString(value) {
+			h := new(Hymn)
+
+			isTitle := re.MatchString(value)
+			if isTitle {
 				m := re.FindStringSubmatch(value)
 
-				h := new(Hymn)
 				h.Number, _ = strconv.Atoi(s.Replace(m[1], ".", "", -1))
 				h.Title = s.Trim(m[2], " ")
 
-				hymns[h.Number] = h
+			} else {
+				rev := regexp.MustCompile(`(?P<Number>[0-9])(?P<Line>[a-zA-Zà-úÀ-Ú0-9 \,\'\!\;\-]+)`)
+
+				fmt.Printf("%q\n", rev.FindString(value))
 			}
+
+			hymns[h.Number] = h
 		}
 
 	}
@@ -65,7 +74,10 @@ func Readlines(filePath string) []string {
 	return lines
 }
 
+// Hymn type
 type Hymn struct {
 	Number int
 	Title  string
+	Verse  string
+	Chorus string
 }
