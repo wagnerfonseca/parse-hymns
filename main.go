@@ -5,9 +5,13 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
+	s "strings"
 )
 
 const sourcePath = "./raw"
+
+var hymns map[int]*Hymn
 
 func main() {
 
@@ -21,22 +25,24 @@ func main() {
 
 		lines := Readlines(filePath)
 
+		hymns = make(map[int]*Hymn)
 		for _, value := range lines {
-			//fmt.Printf("%d : %s\n", idx, value)
-			re := regexp.MustCompile(`(?P<Number>[0-9]+\.) (?P<Title>[a-zA-Zà-úÀ-Ú0-9 \,\'])+`)
+			re := regexp.MustCompile(`(?P<Number>[0-9]+\.) (?P<Title>[a-zA-Zà-úÀ-Ú0-9 \,\']+)`)
 
 			if re.MatchString(value) {
 				m := re.FindStringSubmatch(value)
 
-				//Captura o titulo
-				fmt.Println(m[1])
+				h := new(Hymn)
+				h.Number, _ = strconv.Atoi(s.Replace(m[1], ".", "", -1))
+				h.Title = s.Trim(m[2], " ")
 
-				fmt.Printf("%q\n", re.FindString(value))
+				hymns[h.Number] = h
 			}
 		}
 
 	}
 	d.Close()
+
 }
 
 // Readlines read lines file
@@ -59,7 +65,7 @@ func Readlines(filePath string) []string {
 	return lines
 }
 
-// type struct Hymn {
-// 	Number int
-// 	Title string
-// }
+type Hymn struct {
+	Number int
+	Title  string
+}
