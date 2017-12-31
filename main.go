@@ -12,8 +12,9 @@ import (
 const sourcePath = "./raw"
 
 var (
-	hymns map[int]*Hymn
-	re    = regexp.MustCompile(`(?P<Number>[0-9]+\.) (?P<Title>[a-zA-Zà-úÀ-Ú0-9 \,\']+)`)
+	hymns    map[int]*Hymn
+	re       = regexp.MustCompile(`(?P<Number>[0-9]+\.) (?P<Title>[a-zA-Zà-úÀ-Ú0-9 \,\']+)`)
+	reIniDig = regexp.MustCompile(`^[1-9]`)
 )
 
 func main() {
@@ -29,6 +30,9 @@ func main() {
 		lines := Readlines(filePath)
 
 		hymns = make(map[int]*Hymn)
+
+		var isEndVerse bool
+
 		for _, value := range lines {
 
 			h := new(Hymn)
@@ -38,12 +42,31 @@ func main() {
 				m := re.FindStringSubmatch(value)
 
 				h.Number, _ = strconv.Atoi(s.Replace(m[1], ".", "", -1))
+				fmt.Println(m[1])
 				h.Title = s.Trim(m[2], " ")
 
 			} else {
-				rev := regexp.MustCompile(`(?P<Number>[0-9])(?P<Line>[a-zA-Zà-úÀ-Ú0-9 \,\'\!\;\-]+)`)
 
-				fmt.Printf("%q\n", rev.FindString(value))
+				// isVerse := reIniDig.MatchString(value)
+
+				if len(value) != 0 {
+					numberVerse, _ := strconv.Atoi(reIniDig.FindString(value))
+					if isEndVerse && numberVerse == 0 {
+						fmt.Println("coro >>>>>>>>>>>>>>>>>>>>")
+					}
+
+					vs := Verse{Number: numberVerse, Verse: value}
+
+					// h.NumberVerse = numberVerse
+					// h.Verse = value
+					fmt.Printf("%v\n", vs)
+
+					isEndVerse = false
+				} else {
+					isEndVerse = true
+
+				}
+
 			}
 
 			hymns[h.Number] = h
@@ -78,6 +101,12 @@ func Readlines(filePath string) []string {
 type Hymn struct {
 	Number int
 	Title  string
-	Verse  string
+	Verse  []Verse
 	Chorus string
+}
+
+// Verse strophes of the hymnal
+type Verse struct {
+	Number int
+	Verse  string
 }
