@@ -56,7 +56,10 @@ func main() {
 					}
 
 					vs := Verse{Number: numberVerse, Verse: value}
+					// guardar a informação do verso
 
+
+					
 					// h.NumberVerse = numberVerse
 					// h.Verse = value
 					fmt.Printf("%v\n", vs)
