@@ -9,7 +9,7 @@ import (
 	s "strings"
 )
 
-const sourcePath = "./raw"
+const sourcePath = "./raw_test"
 
 var (
 	hymns    map[int]*Hymn
@@ -31,48 +31,61 @@ func main() {
 
 		hymns = make(map[int]*Hymn)
 
-		var isEndVerse bool
+		var isInitVerse, isChorus bool
+		var n, u, init, numberVerse, cChorus int
+		chorus := make([]string, 30)
 
-		for _, value := range lines {
-
-			h := new(Hymn)
+		for idx, value := range lines {
 
 			isTitle := re.MatchString(value)
 			if isTitle {
+				init = idx
+				isChorus = false
+				cChorus = 0
+				chorus = make([]string, 30)
+
 				m := re.FindStringSubmatch(value)
-
-				h.Number, _ = strconv.Atoi(s.Replace(m[1], ".", "", -1))
-				fmt.Println(m[1])
-				h.Title = s.Trim(m[2], " ")
-
+				n, _ = strconv.Atoi(s.Replace(m[1], ".", "", -1))
 			} else {
-
-				// isVerse := reIniDig.MatchString(value)
-
-				if len(value) != 0 {
-					numberVerse, _ := strconv.Atoi(reIniDig.FindString(value))
-					if isEndVerse && numberVerse == 0 {
-						fmt.Println("coro >>>>>>>>>>>>>>>>>>>>")
+				// defines if is verse or chorus
+				// TODO: create function return if is verse or chorus
+				if len(value) > 1 {
+					numberVerse, _ = strconv.Atoi(reIniDig.FindString(value))
+					if isInitVerse && numberVerse == 0 {
+						isChorus = true
+						cChorus++
 					}
-
-					vs := Verse{Number: numberVerse, Verse: value}
-					// guardar a informação do verso
-
-
-					
-					// h.NumberVerse = numberVerse
-					// h.Verse = value
-					fmt.Printf("%v\n", vs)
-
-					isEndVerse = false
+					isInitVerse = false
 				} else {
-					isEndVerse = true
+					isInitVerse = true
+					isChorus = false
+				}
 
+				// Is verse
+				if !isInitVerse && !isChorus {
+					if n != u {
+						u = n
+					}
+				}
+				// is Chorus
+				if len(value) > 0 && isChorus {
+					chorus = append(chorus, s.Trim(value, " "))
 				}
 
 			}
 
-			hymns[h.Number] = h
+			if init == idx {
+				fmt.Println("-----------------------------")
+			}
+			i1 := len(value) == 0
+			fmt.Printf("-%d | N.v %d | chorus %t | qt c %d | verse %t | title %t | eol %t\n", idx, numberVerse, isChorus, cChorus, isInitVerse, isTitle, i1)
+			// h := new(Hymn)
+			// m := re.FindStringSubmatch(value)
+			// n, _ = strconv.Atoi(s.Replace(m[1], ".", "", -1))
+			// h.Number = n
+			// h.Title = s.Trim(m[2], " ")
+
+			// hymns[h.Number] = h
 		}
 
 	}
