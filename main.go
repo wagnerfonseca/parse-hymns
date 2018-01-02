@@ -13,8 +13,30 @@ const sourcePath = "./raw_test"
 
 var (
 	hymns    map[int]*Hymn
+	indxs    map[int]*indexes
 	re       = regexp.MustCompile(`(?P<Number>[0-9]+\.) (?P<Title>[a-zA-Zà-úÀ-Ú0-9 \,\']+)`)
 	reIniDig = regexp.MustCompile(`^[1-9]`)
+)
+
+type (
+	// Hymn type
+	Hymn struct {
+		Number int
+		Title  string
+		Verse  []Verse
+		Chorus string
+	}
+
+	// Verse strophes of the hymnal
+	Verse struct {
+		Number int
+		Verse  string
+	}
+
+	indexes struct {
+		init int
+		end  int
+	}
 )
 
 func main() {
@@ -34,6 +56,25 @@ func main() {
 		var isInitVerse, isChorus bool
 		var n, u, init, numberVerse, cChorus int
 		chorus := make([]string, 30)
+
+		// capturar indice de inicio e fim hino
+
+		var nTitle int
+		for i, value := range lines {
+			isTitle := re.MatchString(value)
+			if isTitle {
+				m := re.FindStringSubmatch(value)
+				nTitle, _ = strconv.Atoi(s.Replace(m[1], ".", "", -1))
+
+				fmt.Printf("i. %d | n %d | u %d \n", i, nTitle, u)
+				indxs = make(map[int]*indexes)
+				if u != nTitle {
+					indxs[nTitle] = &indexes{init: i}
+					u = nTitle
+				}
+			}
+
+		}
 
 		for idx, value := range lines {
 
@@ -63,9 +104,7 @@ func main() {
 
 				// Is verse
 				if !isInitVerse && !isChorus {
-					if n != u {
-						u = n
-					}
+
 				}
 				// is Chorus
 				if len(value) > 0 && isChorus {
@@ -78,7 +117,7 @@ func main() {
 				fmt.Println("-----------------------------")
 			}
 			i1 := len(value) == 0
-			fmt.Printf("-%d | N.v %d | chorus %t | qt c %d | verse %t | title %t | eol %t\n", idx, numberVerse, isChorus, cChorus, isInitVerse, isTitle, i1)
+			fmt.Printf("-%d | %d | N.v %d | chorus %t | qt c %d | verse %t | title %t | eol %t\n", idx, n, numberVerse, isChorus, cChorus, isInitVerse, isTitle, i1)
 			// h := new(Hymn)
 			// m := re.FindStringSubmatch(value)
 			// n, _ = strconv.Atoi(s.Replace(m[1], ".", "", -1))
@@ -86,6 +125,11 @@ func main() {
 			// h.Title = s.Trim(m[2], " ")
 
 			// hymns[h.Number] = h
+
+			if n != u {
+				u = n
+			}
+
 		}
 
 	}
@@ -111,18 +155,4 @@ func Readlines(filePath string) []string {
 	}
 
 	return lines
-}
-
-// Hymn type
-type Hymn struct {
-	Number int
-	Title  string
-	Verse  []Verse
-	Chorus string
-}
-
-// Verse strophes of the hymnal
-type Verse struct {
-	Number int
-	Verse  string
 }
