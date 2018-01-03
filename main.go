@@ -24,7 +24,7 @@ type (
 		Number int
 		Title  string
 		Verse  []Verse
-		Chorus string
+		Chorus []string
 	}
 
 	// Verse strophes of the hymnal
@@ -95,6 +95,7 @@ func main() {
 				}
 				// is Chorus
 				if len(value) > 0 && isChorus {
+					// TODO: remover os tab \t
 					chorus = append(chorus, s.Trim(value, " "))
 				}
 
@@ -107,6 +108,7 @@ func main() {
 				}
 				// fmt.Printf("-> %d - %d \n", idx+1, v.end)
 				if v.end == idx+1 { // add map
+					h.Chorus = chorus
 					hymns[numberHymn] = h
 				}
 			}
