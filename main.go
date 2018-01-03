@@ -12,8 +12,8 @@ import (
 const sourcePath = "./raw_test"
 
 var (
-	hymns    map[int]*Hymn
-	indxs    map[int]*indexes
+	hymns    map[int]Hymn
+	metrics  map[int]*position
 	re       = regexp.MustCompile(`(?P<Number>[0-9]+\.) (?P<Title>[a-zA-Zà-úÀ-Ú0-9 \,\']+)`)
 	reIniDig = regexp.MustCompile(`^[1-9]`)
 )
@@ -33,9 +33,9 @@ type (
 		Verse  string
 	}
 
-	indexes struct {
-		init int
-		end  int
+	position struct {
+		start int
+		end   int
 	}
 )
 
@@ -51,42 +51,30 @@ func main() {
 
 		lines := Readlines(filePath)
 
-		hymns = make(map[int]*Hymn)
+		// Delimited the start and end each of hymn
+		metrics = delimeted(lines)
+		// for k, v := range metrics {
+		// 	fmt.Printf("N: %3d - s: %5d e: %5d\n", k, v.start, v.end)
+		// }
 
+		//
+		var h Hymn
+		var numberHymn, numberVerse int
 		var isInitVerse, isChorus bool
-		var n, u, init, numberVerse, cChorus int
-		chorus := make([]string, 30)
+		var title string
+		var chorus []string
 
-		// capturar indice de inicio e fim hino
-
-		var nTitle int
-		for i, value := range lines {
-			isTitle := re.MatchString(value)
-			if isTitle {
-				m := re.FindStringSubmatch(value)
-				nTitle, _ = strconv.Atoi(s.Replace(m[1], ".", "", -1))
-
-				fmt.Printf("i. %d | n %d | u %d \n", i, nTitle, u)
-				indxs = make(map[int]*indexes)
-				if u != nTitle {
-					indxs[nTitle] = &indexes{init: i}
-					u = nTitle
-				}
-			}
-
-		}
-
+		hymns = make(map[int]Hymn)
 		for idx, value := range lines {
 
 			isTitle := re.MatchString(value)
 			if isTitle {
-				init = idx
 				isChorus = false
-				cChorus = 0
-				chorus = make([]string, 30)
+				chorus = nil
 
 				m := re.FindStringSubmatch(value)
-				n, _ = strconv.Atoi(s.Replace(m[1], ".", "", -1))
+				numberHymn, _ = strconv.Atoi(s.Replace(m[1], ".", "", -1))
+				title = s.Trim(m[2], " ")
 			} else {
 				// defines if is verse or chorus
 				// TODO: create function return if is verse or chorus
@@ -94,7 +82,6 @@ func main() {
 					numberVerse, _ = strconv.Atoi(reIniDig.FindString(value))
 					if isInitVerse && numberVerse == 0 {
 						isChorus = true
-						cChorus++
 					}
 					isInitVerse = false
 				} else {
@@ -113,23 +100,21 @@ func main() {
 
 			}
 
-			if init == idx {
-				fmt.Println("-----------------------------")
-			}
-			i1 := len(value) == 0
-			fmt.Printf("-%d | %d | N.v %d | chorus %t | qt c %d | verse %t | title %t | eol %t\n", idx, n, numberVerse, isChorus, cChorus, isInitVerse, isTitle, i1)
-			// h := new(Hymn)
-			// m := re.FindStringSubmatch(value)
-			// n, _ = strconv.Atoi(s.Replace(m[1], ".", "", -1))
-			// h.Number = n
-			// h.Title = s.Trim(m[2], " ")
-
-			// hymns[h.Number] = h
-
-			if n != u {
-				u = n
+			// get index the hymn
+			if v, ok := metrics[numberHymn]; ok {
+				if v.start == idx { // create
+					h = Hymn{Number: numberHymn, Title: title}
+				}
+				// fmt.Printf("-> %d - %d \n", idx+1, v.end)
+				if v.end == idx+1 { // add map
+					hymns[numberHymn] = h
+				}
 			}
 
+		}
+
+		for k, v := range hymns {
+			fmt.Printf("id: %d - %v\n", k, v)
 		}
 
 	}
@@ -155,4 +140,39 @@ func Readlines(filePath string) []string {
 	}
 
 	return lines
+}
+
+func delimeted(lines []string) map[int]*position {
+	var n, ln, li int // n: number , ln: last number, li: last index
+	mts := make(map[int]*position)
+	for i, value := range lines {
+		if re.MatchString(value) { // title hymn
+			m := re.FindStringSubmatch(value)
+			n, _ = strconv.Atoi(s.Replace(m[1], ".", "", -1))
+
+			if ln != n {
+				// get the last index hymn
+				if v, ok := mts[ln]; ok {
+					v.start = li
+					v.end = i
+				}
+				// last index (li)
+				if li != i {
+					li = i
+				}
+				if _, ok := mts[n]; !ok {
+					mts[n] = &position{start: i}
+				}
+				ln = n
+			}
+		}
+
+		// last line file
+		if len(lines)-1 == i {
+			if v, ok := mts[n]; ok {
+				v.end = len(lines)
+			}
+		}
+	}
+	return mts
 }
