@@ -16,6 +16,9 @@ var (
 	metrics  map[int]*position
 	re       = regexp.MustCompile(`(?P<Number>[0-9]+\.) (?P<Title>[a-zA-Zà-úÀ-Ú0-9 \,\']+)`)
 	reIniDig = regexp.MustCompile(`^[1-9]`)
+
+	//reInsideWhtsp := regexp.MustCompile(`[\s\p{Zs}]{2,}`)
+
 )
 
 type (
@@ -30,7 +33,7 @@ type (
 	// Verse strophes of the hymnal
 	Verse struct {
 		Number int
-		Verse  string
+		Verse  []string
 	}
 
 	position struct {
@@ -52,15 +55,16 @@ func main() {
 		lines := Readlines(filePath)
 
 		// Delimited the start and end each of hymn
-		metrics = delimeted(lines)
+		metrics = delimetedHymn(lines)
 		// for k, v := range metrics {
 		// 	fmt.Printf("N: %3d - s: %5d e: %5d\n", k, v.start, v.end)
 		// }
 
 		//
 		var h Hymn
+		// var vs Verse
 		var numberHymn, numberVerse int
-		var isInitVerse, isChorus bool
+		var isEndVerse, isChorus bool
 		var title string
 		var chorus []string
 
@@ -80,17 +84,17 @@ func main() {
 				// TODO: create function return if is verse or chorus
 				if len(value) > 1 {
 					numberVerse, _ = strconv.Atoi(reIniDig.FindString(value))
-					if isInitVerse && numberVerse == 0 {
+					if isEndVerse && numberVerse == 0 {
 						isChorus = true
 					}
-					isInitVerse = false
+					isEndVerse = false
 				} else {
-					isInitVerse = true
+					isEndVerse = true
 					isChorus = false
 				}
 
-				// Is verse
-				if !isInitVerse && !isChorus {
+				if !isEndVerse && !isChorus {
+					//verse = append(verse, s.Trim(value, " "))
 
 				}
 				// is Chorus
@@ -105,9 +109,26 @@ func main() {
 			if v, ok := metrics[numberHymn]; ok {
 				if v.start == idx { // create
 					h = Hymn{Number: numberHymn, Title: title}
+					fmt.Printf("n-> %d ----------------------\n", numberHymn)
 				}
-				// fmt.Printf("-> %d - %d \n", idx+1, v.end)
+
+				if v.start+1 < idx && v.end+1 >= idx {
+					if !isChorus {
+						if numberVerse > 0 {
+
+							//vs = Verse{Number: numberVerse, Verse: verse}
+						}
+						if len(value) > 0 {
+							fmt.Println("add <" + value + ">")
+						} else {
+							fmt.Println("X zerar")
+						}
+					}
+
+				}
+
 				if v.end == idx+1 { // add map
+					// fmt.Println(vs)
 					h.Chorus = chorus
 					hymns[numberHymn] = h
 				}
@@ -115,11 +136,12 @@ func main() {
 
 		}
 
-		for k, v := range hymns {
-			fmt.Printf("id: %d - %v\n", k, v)
-		}
+		// for k, v := range hymns {
+		// 	fmt.Printf("id: %d - %v\n", k, v)
+		// }
 
 	}
+
 	d.Close()
 
 }
@@ -144,7 +166,7 @@ func Readlines(filePath string) []string {
 	return lines
 }
 
-func delimeted(lines []string) map[int]*position {
+func delimetedHymn(lines []string) map[int]*position {
 	var n, ln, li int // n: number , ln: last number, li: last index
 	mts := make(map[int]*position)
 	for i, value := range lines {
