@@ -186,7 +186,7 @@ func delimetedHymn(lines []string) map[int]*position {
 	var n, ln, li int // n: number , ln: last number, li: last index
 	mts := make(map[int]*position)
 	for i, value := range lines {
-		if re.MatchString(value) { // title hymn
+		if re.MatchString(value) { // hymn title
 			n, _ = getNumberTitleHymn(value)
 
 			if ln != n {
@@ -217,54 +217,26 @@ func delimetedHymn(lines []string) map[int]*position {
 }
 
 func delimetedVerse(lines []string) map[int]map[int]*position {
-	var nhymn, nstrf, lnstrf, li int // n: number hymn, nv: verse number, lnv: last number, li: last index from verse
+	var nhymn, lnhymn, nstrf, lnstrf, li int
 	lim := make(map[int]map[int]*position)
 
 	for i, value := range lines {
 		if re.MatchString(value) {
 			nhymn, _ = getNumberTitleHymn(value)
-			//lim[nhymn] = make(map[int]*position)
 		} else { // somewhere strophes
 			if len(value) > 1 {
 				nstrf = getNumberVerse(value)
-				mms := make(map[int]*position)
 				if nstrf > 0 {
 					if lnstrf != nstrf {
-						if nstrf == 1 {
-							lnstrf = 0
-						}
-						fmt.Printf(" nh %3d | nstrf %d | lnstrf %d | i %3d | li %3d\n", nhymn, nstrf, lnstrf, i, li)
 
-						if v, ok := mms[lnstrf]; ok {
-							fmt.Println("-----")
-							v.end = i
+						fmt.Printf(" nh %3d | lnh %3d | nstrf %d | lnstrf %d | i %3d | li %3d\n", nhymn, lnhymn, nstrf, lnstrf, i, li)
+
+						// get the last strophe of hymn previous
+						if m, ok := lim[lnhymn][lnstrf]; ok {
+							m.end = i
 						}
 
-						if _, ok := mms[nstrf]; !ok {
-							mms[nstrf] = &position{start: i}
-						}
-
-						// verifico se o hino tem estrofe
-						//
-						// for k, v := range mm {
-						// 	fmt.Printf("%d %d %d \n", k, v.start, v.end)
-						// }
-
-						// if !ok { // se não tem estrofe crio uma novo mapa de estrofes
-						// 	mm = make(map[int]*position)
-						// 	mm[nstrf] = &position{start: i} // crio um mapa com a estrofe atual
-						// 	lim[nhymn] = mm
-						// }
-
-						// else {
-						// 	// o hino ja tem estrofe
-						// 	// verifico a estrofe ja existe que esta em `mm`
-
-						// 	fmt.Println(mm)
-						// 	if v, ok := mm[lnstrf]; ok {
-						// 		v.end = i
-						// 	}
-						// }
+						add(lim, nhymn, nstrf, i, 0)
 
 						// last index verse number (liv)
 						if li != i {
@@ -273,14 +245,38 @@ func delimetedVerse(lines []string) map[int]map[int]*position {
 
 						// strophe number
 						lnstrf = nstrf
-					}
-				}
 
-				fmt.Printf("%q\n", mms)
+						// last hymn number
+						if lnhymn != nhymn {
+							lnhymn = nhymn
+						}
+					}
+					//*err index
+				}
+				// *err index
 			}
 		}
 
-		// last line file
+		/*
+
+			NH: 113
+			 ns:   3 | s:  24 e:  36(33/34)
+			 ns:   1 | s:   2 e:  13
+			 ns:   2 | s:  13 e:  24
+
+			NH: 114
+			 ns:   1 | s:  36 e:  46(41)
+			 ns:   2 | s:  46 e:  51
+			 ns:   3 | s:  51 e:  56
+			 ns:   4 | s:  56 e:  63(60/61)
+
+			NH: 170
+			ns:   2 | s: 208 e: 213
+			ns:   3 | s: 213 e:   0(217-218)
+			ns:   1 | s: 198 e: 208(203)
+		*/
+
+		// last line file from strophe previous TODO:******
 		// if len(lines)-1 == i {
 		// 	if v, ok := lim[n]; ok {
 		// 		v.end = len(lines)
@@ -289,42 +285,20 @@ func delimetedVerse(lines []string) map[int]map[int]*position {
 	}
 
 	for k, v := range lim {
-		fmt.Printf("nh: %3d ", k)
+		fmt.Printf("NH: %3d \n", k)
 		for k, v := range v {
-			fmt.Printf("ns: %3d | s: %3d e: %3d\n", k, v.start, v.end)
+			fmt.Printf(" ns: %3d | s: %3d e: %3d\n", k, v.start, v.end)
 		}
 	}
 
 	return lim
 }
 
-/*
-
- nh 113 | nstrf 1 | lnstrf 0 | i   2 | li   0
- nh 113 | nstrf 2 | lnstrf 1 | i  13 | li   2
- nh 113 | nstrf 3 | lnstrf 2 | i  24 | li  13
- nh 114 | nstrf 1 | lnstrf 3 | i  36 | li  24
- nh 114 | nstrf 2 | lnstrf 1 | i  46 | li  36
- nh 114 | nstrf 3 | lnstrf 2 | i  51 | li  46
- nh 114 | nstrf 4 | lnstrf 3 | i  56 | li  51
- nh 115 | nstrf 1 | lnstrf 4 | i  63 | li  56
- nh 115 | nstrf 2 | lnstrf 1 | i  75 | li  63
- nh 115 | nstrf 3 | lnstrf 2 | i  81 | li  75
- nh 116 | nstrf 1 | lnstrf 3 | i  89 | li  81
- nh 116 | nstrf 2 | lnstrf 1 | i 100 | li  89
- nh 116 | nstrf 3 | lnstrf 2 | i 106 | li 100
- nh 117 | nstrf 1 | lnstrf 3 | i 114 | li 106
- nh 117 | nstrf 2 | lnstrf 1 | i 123 | li 114
- nh 117 | nstrf 3 | lnstrf 2 | i 128 | li 123
- nh 117 | nstrf 4 | lnstrf 3 | i 133 | li 128
- nh 168 | nstrf 1 | lnstrf 4 | i 140 | li 133
- nh 168 | nstrf 2 | lnstrf 1 | i 153 | li 140
- nh 168 | nstrf 3 | lnstrf 2 | i 161 | li 153
- nh 169 | nstrf 1 | lnstrf 3 | i 171 | li 161
- nh 169 | nstrf 2 | lnstrf 1 | i 181 | li 171
- nh 169 | nstrf 3 | lnstrf 2 | i 186 | li 181
- nh 169 | nstrf 4 | lnstrf 3 | i 191 | li 186
- nh 170 | nstrf 1 | lnstrf 4 | i 198 | li 191
- nh 170 | nstrf 2 | lnstrf 1 | i 208 | li 198
- nh 170 | nstrf 3 | lnstrf 2 | i 213 | li 208
-*/
+func add(m map[int]map[int]*position, hymn, verse, start, end int) {
+	mm, ok := m[hymn]
+	if !ok {
+		mm = make(map[int]*position)
+		m[hymn] = mm
+	}
+	mm[verse] = &position{start, end}
+}
