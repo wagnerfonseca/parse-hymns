@@ -60,12 +60,12 @@ func main() {
 		// for k, v := range limHymn {
 		// 	fmt.Printf("N: %3d - s: %5d e: %5d\n", k, v.start, v.end)
 		// }
-		for k, v := range limVerse {
-			fmt.Printf("nh: %3d ", k)
-			for k, v := range v {
-				fmt.Printf("ns: %3d | s: %3d e: %3d\n", k, v.start, v.end)
-			}
-		}
+		// for k, v := range limVerse {
+		// 	fmt.Printf("nh: %3d ", k)
+		// 	for k, v := range v {
+		// 		fmt.Printf("ns: %3d | s: %3d e: %3d\n", k, v.start, v.end)
+		// 	}
+		// }
 
 		//
 		var h Hymn
@@ -227,22 +227,22 @@ func delimetedVerse(lines []string) map[int]map[int]*position {
 		} else { // somewhere strophes
 			if len(value) > 1 {
 				nstrf = getNumberVerse(value)
+				mms := make(map[int]*position)
 				if nstrf > 0 {
-
 					if lnstrf != nstrf {
+						if nstrf == 1 {
+							lnstrf = 0
+						}
 						fmt.Printf(" nh %3d | nstrf %d | lnstrf %d | i %3d | li %3d\n", nhymn, nstrf, lnstrf, i, li)
 
-						// Novo mapa de estofes
-						mms := make(map[int]*position)
-
 						if v, ok := mms[lnstrf]; ok {
+							fmt.Println("-----")
 							v.end = i
 						}
 
 						if _, ok := mms[nstrf]; !ok {
 							mms[nstrf] = &position{start: i}
 						}
-						lim[nhymn] = mms
 
 						// verifico se o hino tem estrofe
 						//
@@ -275,6 +275,8 @@ func delimetedVerse(lines []string) map[int]map[int]*position {
 						lnstrf = nstrf
 					}
 				}
+
+				fmt.Printf("%q\n", mms)
 			}
 		}
 
@@ -285,6 +287,14 @@ func delimetedVerse(lines []string) map[int]map[int]*position {
 		// 	}
 		// }
 	}
+
+	for k, v := range lim {
+		fmt.Printf("nh: %3d ", k)
+		for k, v := range v {
+			fmt.Printf("ns: %3d | s: %3d e: %3d\n", k, v.start, v.end)
+		}
+	}
+
 	return lim
 }
 
