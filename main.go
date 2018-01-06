@@ -9,7 +9,7 @@ import (
 	s "strings"
 )
 
-const sourcePath = "./raw_test"
+const sourcePath = "./raw"
 
 type (
 	// Hymn type
@@ -217,18 +217,19 @@ func delimetedHymn(lines []string) map[int]*position {
 }
 
 func delimetedVerse(lines []string) map[int]map[int]*position {
-	var nhymn, lnhymn, nstrf, lnstrf, li, iblank, liblank int
+	var nhymn, lnhymn, nstrf, lnstrf, li, iblank, liblank, c int
 	lim := make(map[int]map[int]*position)
 
 	for i, value := range lines {
 		if re.MatchString(value) {
 			nhymn, _ = getNumberTitleHymn(value)
+			c = 0
 		} else { // somewhere strophes
 			if len(value) > 1 {
 				nstrf = getNumberVerse(value)
 				if nstrf > 0 {
 					if lnstrf != nstrf {
-						fmt.Printf(" nh %3d | lnh %3d | nstrf %d | lnstrf %d | i %3d | li %3d | ib %d | lb %d\n", nhymn, lnhymn, nstrf, lnstrf, i, li, iblank, liblank)
+						//fmt.Printf(" nh %3d | lnh %3d | nstrf %d | lnstrf %d | i %3d | li %3d | ib %d | lb %d | c %d \n", nhymn, lnhymn, nstrf, lnstrf, i, li, iblank, liblank, c)
 
 						// get the last strophe of hymn previous
 						if m, ok := lim[lnhymn][lnstrf]; ok {
@@ -239,7 +240,17 @@ func delimetedVerse(lines []string) map[int]map[int]*position {
 							}
 						}
 
+						// Add new delimeted inde strophe
 						add(lim, nhymn, nstrf, i+1, 0)
+
+						// avoid count index of chorus in first strophe
+						if lnstrf == 1 {
+							if m, ok := lim[nhymn][1]; ok {
+								if liblank > 1 {
+									m.end = liblank
+								}
+							}
+						}
 
 						// strophe number
 						lnstrf = nstrf
@@ -250,8 +261,8 @@ func delimetedVerse(lines []string) map[int]map[int]*position {
 						}
 					}
 				} else {
-					//fmt.Printf("[[[]]] nh %3d | lnh %3d | nstrf %d | lnstrf %d | i %3d | li %3d | ib %d | lb %d\n", nhymn, lnhymn, nstrf, lnstrf, i, li, iblank, liblank)
 					if liblank != iblank {
+						c++
 						liblank = iblank
 					}
 					// last index verse number (liv)
@@ -264,31 +275,12 @@ func delimetedVerse(lines []string) map[int]map[int]*position {
 			}
 		}
 
-		/*
-
-			NH: 113
-			 ns:   3 | s:  24 e:  36(33/34)
-			 ns:   1 | s:   2 e:  13
-			 ns:   2 | s:  13 e:  24
-
-			NH: 114
-			 ns:   1 | s:  36 e:  46(41)
-			 ns:   2 | s:  46 e:  51
-			 ns:   3 | s:  51 e:  56
-			 ns:   4 | s:  56 e:  63(60/61)
-
-			NH: 170
-			ns:   2 | s: 208 e: 213
-			ns:   3 | s: 213 e:   0(217-218)
-			ns:   1 | s: 198 e: 208(203)
-		*/
-
-		// last line file from strophe previous TODO:******
-		// if len(lines)-1 == i {
-		// 	if v, ok := lim[n]; ok {
-		// 		v.end = len(lines)
-		// 	}
-		// }
+		// last line file from strophe previous
+		if len(lines)-1 == i {
+			if v, ok := lim[nhymn][lnstrf]; ok {
+				v.end = i
+			}
+		}
 	}
 
 	for k, v := range lim {
