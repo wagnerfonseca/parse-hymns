@@ -217,7 +217,7 @@ func delimetedHymn(lines []string) map[int]*position {
 }
 
 func delimetedVerse(lines []string) map[int]map[int]*position {
-	var nhymn, lnhymn, nstrf, lnstrf, li int
+	var nhymn, lnhymn, nstrf, lnstrf, li, iblank, liblank int
 	lim := make(map[int]map[int]*position)
 
 	for i, value := range lines {
@@ -228,20 +228,18 @@ func delimetedVerse(lines []string) map[int]map[int]*position {
 				nstrf = getNumberVerse(value)
 				if nstrf > 0 {
 					if lnstrf != nstrf {
-
-						fmt.Printf(" nh %3d | lnh %3d | nstrf %d | lnstrf %d | i %3d | li %3d\n", nhymn, lnhymn, nstrf, lnstrf, i, li)
+						fmt.Printf(" nh %3d | lnh %3d | nstrf %d | lnstrf %d | i %3d | li %3d | ib %d | lb %d\n", nhymn, lnhymn, nstrf, lnstrf, i, li, iblank, liblank)
 
 						// get the last strophe of hymn previous
 						if m, ok := lim[lnhymn][lnstrf]; ok {
-							m.end = i
+							if nstrf == 1 {
+								m.end = li + 1
+							} else {
+								m.end = iblank
+							}
 						}
 
-						add(lim, nhymn, nstrf, i, 0)
-
-						// last index verse number (liv)
-						if li != i {
-							li = i
-						}
+						add(lim, nhymn, nstrf, i+1, 0)
 
 						// strophe number
 						lnstrf = nstrf
@@ -251,9 +249,18 @@ func delimetedVerse(lines []string) map[int]map[int]*position {
 							lnhymn = nhymn
 						}
 					}
-					//*err index
+				} else {
+					//fmt.Printf("[[[]]] nh %3d | lnh %3d | nstrf %d | lnstrf %d | i %3d | li %3d | ib %d | lb %d\n", nhymn, lnhymn, nstrf, lnstrf, i, li, iblank, liblank)
+					if liblank != iblank {
+						liblank = iblank
+					}
+					// last index verse number (liv)
+					if li != i {
+						li = i
+					}
 				}
-				// *err index
+			} else {
+				iblank = i
 			}
 		}
 
