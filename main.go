@@ -9,7 +9,7 @@ import (
 	s "strings"
 )
 
-const sourcePath = "./raw"
+const sourcePath = "./raw_test"
 
 type (
 	// Hymn type
@@ -57,24 +57,15 @@ func main() {
 		// Delimited the start and end each of hymn
 		limHymn = delimetedHymn(lines)
 		limVerse = delimetedVerse(lines)
-		// for k, v := range limHymn {
-		// 	fmt.Printf("N: %3d - s: %5d e: %5d\n", k, v.start, v.end)
-		// }
-		for k, v := range limVerse {
-			fmt.Printf("Hymn: %3d \n", k)
-			for k, v := range v {
-				fmt.Printf(" Strophe: %d | Start: %5d End: %5d\n", k, v.start, v.end)
-			}
-		}
 
-		//
+		//TODO agora com o limites montar as estrofes
+
 		var h Hymn
-		var vs Verse
+		//var vs Verse
 		var numberHymn, numberVerse int
 		var isEndVerse, isChorus bool
 		var title string
-		var chorus, strophe []string
-		// var strophes []Verse
+		var chorus []string
 
 		hymns = make(map[int]Hymn)
 
@@ -85,7 +76,6 @@ func main() {
 				isChorus = false
 				chorus = nil
 				numberHymn, title = getNumberTitleHymn(value)
-				//title = s.Trim(m[2], " ")
 			} else {
 				// defines if is verse or chorus
 				// TODO: create function return if is verse or chorus
@@ -112,25 +102,25 @@ func main() {
 			if v, ok := limHymn[numberHymn]; ok {
 				if v.start == idx { // create
 					h = Hymn{Number: numberHymn, Title: title}
-					// fmt.Printf("n-> %d ----------------------\n", numberHymn) *****
-					vs = Verse{Number: 0, Verse: nil}
+					//vs = Verse{Number: 0, Verse: nil}
 				}
 
-				if v.start <= idx+1 && v.end >= idx+1 {
-					if !isChorus && !isTitle {
-						if len(value) > 1 {
-							strophe = append(strophe, s.Trim(value, " "))
-						} else {
-							if len(strophe) > 0 {
-								vs.Verse = strophe
-								strophe = nil
-							}
-						}
-						if numberVerse > 0 {
-							vs.Number = numberVerse
-						}
-					}
-				}
+				// strophes
+				// if v.start <= idx+1 && v.end >= idx+1 {
+				// 	if !isChorus && !isTitle {
+				// 		if len(value) > 1 {
+				// 			strophe = append(strophe, s.Trim(value, " "))
+				// 		} else {
+				// 			if len(strophe) > 0 {
+				// 				vs.Verse = strophe
+				// 				strophe = nil
+				// 			}
+				// 		}
+				// 		if numberVerse > 0 {
+				// 			vs.Number = numberVerse
+				// 		}
+				// 	}
+				// }
 
 				if v.end == idx+1 { // add map
 					h.Chorus = chorus
@@ -139,10 +129,6 @@ func main() {
 			}
 
 		}
-
-		// for k, v := range hymns {
-		// 	fmt.Printf("id: %d - %v\n", k, v)
-		// }
 
 	}
 
