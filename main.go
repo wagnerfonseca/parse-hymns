@@ -60,12 +60,12 @@ func main() {
 		// for k, v := range limHymn {
 		// 	fmt.Printf("N: %3d - s: %5d e: %5d\n", k, v.start, v.end)
 		// }
-		// for k, v := range limVerse {
-		// 	fmt.Printf("nh: %3d ", k)
-		// 	for k, v := range v {
-		// 		fmt.Printf("ns: %3d | s: %3d e: %3d\n", k, v.start, v.end)
-		// 	}
-		// }
+		for k, v := range limVerse {
+			fmt.Printf("Hymn: %3d \n", k)
+			for k, v := range v {
+				fmt.Printf(" Strophe: %d | Start: %5d End: %5d\n", k, v.start, v.end)
+			}
+		}
 
 		//
 		var h Hymn
@@ -229,8 +229,6 @@ func delimetedVerse(lines []string) map[int]map[int]*position {
 				nstrf = getNumberVerse(value)
 				if nstrf > 0 {
 					if lnstrf != nstrf {
-						//fmt.Printf(" nh %3d | lnh %3d | nstrf %d | lnstrf %d | i %3d | li %3d | ib %d | lb %d | c %d \n", nhymn, lnhymn, nstrf, lnstrf, i, li, iblank, liblank, c)
-
 						// get the last strophe of hymn previous
 						if m, ok := lim[lnhymn][lnstrf]; ok {
 							if nstrf == 1 {
@@ -240,13 +238,13 @@ func delimetedVerse(lines []string) map[int]map[int]*position {
 							}
 						}
 
-						// Add new delimeted inde strophe
+						// Add new delimeted index strophe
 						add(lim, nhymn, nstrf, i+1, 0)
 
 						// avoid count index of chorus in first strophe
 						if lnstrf == 1 {
 							if m, ok := lim[nhymn][1]; ok {
-								if liblank > 1 {
+								if liblank > 1 && m.start <= liblank {
 									m.end = liblank
 								}
 							}
@@ -280,13 +278,6 @@ func delimetedVerse(lines []string) map[int]map[int]*position {
 			if v, ok := lim[nhymn][lnstrf]; ok {
 				v.end = i
 			}
-		}
-	}
-
-	for k, v := range lim {
-		fmt.Printf("NH: %3d \n", k)
-		for k, v := range v {
-			fmt.Printf(" ns: %3d | s: %3d e: %3d\n", k, v.start, v.end)
 		}
 	}
 
